@@ -1,5 +1,6 @@
 import { Router } from "express";
 import database from "./database";
+import user from "./user";
 
 export default function api() {
   const router = Router();
@@ -26,12 +27,8 @@ export default function api() {
 function apiV1() {
   const router = Router();
 
-  router
-    .use((req, res, next) => {
-      console.log("API V1");
-      next();
-    })
-    .use("/database", database());
+  router.use("/database", database());
+  router.use("/user", user());
 
   return router;
 }

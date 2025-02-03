@@ -128,6 +128,56 @@ export default function Home() {
     }
   };
 
+  const getUsers = async () => {
+    try {
+      const response = await fetch(
+        process.env.NODE_ENV === "production"
+          ? "https://websocket-example-production.up.railway.app/api/v1/user/"
+          : "http://localhost:4000/api/v1/user/"
+      );
+      const res = await response.json();
+      console.log(res);
+    } catch (e) {
+      console.error("Error getting users:", e);
+    }
+
+    try {
+      const response = await fetch(
+        process.env.NODE_ENV === "production"
+          ? `https://websocket-example-production.up.railway.app/api/v1/user/${message}`
+          : `http://localhost:4000/api/v1/user/${message}`
+      );
+      const res = await response.json();
+      console.log(res);
+    } catch (e) {
+      console.error("Error getting users:", e);
+    }
+  };
+
+  const createUser = async () => {
+    try {
+      const response = await fetch(
+        process.env.NODE_ENV === "production"
+          ? "https://websocket-example-production.up.railway.app/api/v1/user/post"
+          : "http://localhost:4000/api/v1/user/post",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ newUser: message }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to post message");
+      }
+    } catch (error) {
+      console.error("Error posting message:", error);
+    }
+    setMessage("");
+  };
+
   return (
     <div>
       <button onClick={openWebSocket}>Open WebSocket</button>
@@ -140,6 +190,8 @@ export default function Home() {
         placeholder="Type your message"
       />
       <button onClick={sendMessage}>Send Message</button>
+      <button onClick={getUsers}>get users</button>
+      <button onClick={createUser}>create user</button>
       <ul>
         {messages.map((msg, index) => (
           <li key={index}>{msg}</li>
