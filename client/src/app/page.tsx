@@ -1,202 +1,171 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-const TIME_BUFFER = 1000 * 1;
-const HEARTBEAT_TIMEOUT = 1000 * 5 + TIME_BUFFER;
-const HEARTBEAT_VALUE = 1;
+import { useState, useEffect, useRef, useMemo } from "react";
+
+interface Token {
+  id: number;
+  name: string;
+  symbol: string;
+  price: number;
+  decimals: number;
+}
+
+const mockTokens: Token[] = [
+  {
+    id: 1,
+    name: "Bitcoin",
+    symbol: "BTC",
+    price: 45000,
+    decimals: 8,
+  },
+  {
+    id: 2,
+    name: "Ethereum",
+    symbol: "ETH",
+    price: 3000,
+    decimals: 18,
+  },
+  {
+    id: 3,
+    name: "Tether",
+    symbol: "USDT",
+    price: 1,
+    decimals: 6,
+  },
+  // Add more mock tokens here
+];
+
+const tokenIdMap: { [key: string]: Token } = mockTokens.reduce((acc, token) => {
+  acc[token.symbol] = token;
+  return acc;
+}, {} as { [key: string]: Token });
 
 export default function Home() {
-  const wsRef = useRef<WebSocketExt | null>(null);
-  const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<string[]>([]);
+  const [debouncedInputAmount, setDebouncedInputAmount] = useState("");
 
-  const addMessage = (message: string) => {
-    setMessages((prevMessages) => [...prevMessages, message]);
-  };
+  const [inputAmount, setInputAmount] = useState("");
+  const [inputCurrency, setInputCurrency] = useState(mockTokens[0].symbol);
+  const [outputCurrency, setOutputCurrency] = useState(mockTokens[1].symbol);
 
-  const closeConnection = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-  };
+  const [amountLoading, setAmountLoading] = useState(false);
 
-  const heartbeat = () => {
-    if (!wsRef.current) {
-      return;
-    } else if (!!wsRef.current.pingTimeout) {
-      clearTimeout(wsRef.current.pingTimeout);
+  const outputAmount = useMemo(() => {
+    const inputToken = tokenIdMap[inputCurrency];
+    const outputToken = tokenIdMap[outputCurrency];
+    if (!inputToken || !outputToken) {
+      return "";
     }
 
-    wsRef.current.pingTimeout = setTimeout(() => {
-      wsRef.current?.close();
-
-      // business logic to deciding whether to reconnect or not
-    }, HEARTBEAT_TIMEOUT);
-
-    const data = new Uint8Array(1);
-    data[0] = HEARTBEAT_VALUE;
-
-    wsRef.current.send(data);
-  };
-
-  const isBinary = (data: any) => {
-    return (
-      typeof data === "object" &&
-      Object.prototype.toString.call(data) === "[object Blob]"
-    );
-  };
-
-  const loadMessageHistory = async () => {
-    try {
-      const response = await fetch(
-        process.env.NODE_ENV === "production"
-          ? "https://websocket-example-production.up.railway.app/api/v1/database"
-          : "http://localhost:4000/api/v1/database"
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch messages");
-      }
-
-      const messages = await response.json();
-      setMessages(messages.map((msg: any) => msg.text));
-    } catch (error) {
-      console.error("Error fetching messages:", error);
+    const inputAmountNumber = parseFloat(debouncedInputAmount);
+    if (isNaN(inputAmountNumber)) {
+      return "";
     }
-  };
 
-  const openWebSocket = () => {
-    closeConnection();
-    loadMessageHistory();
-    const socket = new WebSocket(
-      process.env.NODE_ENV === "production"
-        ? "wss://websocket-example-production.up.railway.app"
-        : "ws://localhost:4000"
-    ) as WebSocketExt;
-    socket.onopen = () => {
-      addMessage("WebSocket connection opened");
+    const outputAmountNumber =
+      (inputAmountNumber * inputToken.price) / outputToken.price;
+    return outputAmountNumber.toFixed(outputToken.decimals);
+  }, [debouncedInputAmount, inputCurrency, outputCurrency]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedInputAmount(inputAmount);
+      setAmountLoading(false);
+      console.log(`Debounced value: ${inputAmount}`);
+    }, 1000);
+
+    return () => {
+      clearTimeout(handler);
     };
-    socket.onclose = () => {
-      addMessage("WebSocket connection closed");
-      if (!!socket.pingTimeout) {
-        clearTimeout(socket.pingTimeout);
-      }
-    };
-    socket.onerror = (error) => {
-      addMessage(`WebSocket error: ${error}`);
-    };
-    socket.onmessage = (event) => {
-      if (isBinary(event.data)) {
-        heartbeat();
-      } else {
-        addMessage(event.data);
-      }
-    };
-    wsRef.current = socket;
+  }, [inputAmount]);
+
+  const handleTrade = () => {
+    alert(`Trade executed with value: ${debouncedInputAmount}`);
   };
 
-  const closeWebSocket = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
+  const switchInputAndOutput = () => {
+    setInputCurrency(outputCurrency);
+    setOutputCurrency(inputCurrency);
   };
 
-  const sendMessage = async () => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(message);
-      try {
-        const response = await fetch(
-          process.env.NODE_ENV === "production"
-            ? "https://websocket-example-production.up.railway.app/api/v1/database/post"
-            : "http://localhost:4000/api/v1/database/post",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ text: message }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to post message");
-        }
-      } catch (error) {
-        console.error("Error posting message:", error);
-      }
-      setMessage("");
-    }
-  };
-
-  const getUsers = async () => {
-    try {
-      const response = await fetch(
-        process.env.NODE_ENV === "production"
-          ? "https://websocket-example-production.up.railway.app/api/v1/user/"
-          : "http://localhost:4000/api/v1/user/"
-      );
-      const res = await response.json();
-      console.log(res);
-    } catch (e) {
-      console.error("Error getting users:", e);
-    }
-
-    try {
-      const response = await fetch(
-        process.env.NODE_ENV === "production"
-          ? `https://websocket-example-production.up.railway.app/api/v1/user/${message}`
-          : `http://localhost:4000/api/v1/user/${message}`
-      );
-      const res = await response.json();
-      console.log(res);
-    } catch (e) {
-      console.error("Error getting users:", e);
-    }
-  };
-
-  const createUser = async () => {
-    try {
-      const response = await fetch(
-        process.env.NODE_ENV === "production"
-          ? "https://websocket-example-production.up.railway.app/api/v1/user/post"
-          : "http://localhost:4000/api/v1/user/post",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ newUser: message }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to post message");
-      }
-    } catch (error) {
-      console.error("Error posting message:", error);
-    }
-    setMessage("");
-  };
+  console.log(amountLoading);
 
   return (
-    <div>
-      <button onClick={openWebSocket}>Open WebSocket</button>
-      <button onClick={closeWebSocket}>Close WebSocket</button>
-      <input
-        className="text-black"
-        type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type your message"
-      />
-      <button onClick={sendMessage}>Send Message</button>
-      <button onClick={getUsers}>get users</button>
-      <button onClick={createUser}>create user</button>
-      <ul>
-        {messages.map((msg, index) => (
-          <li key={index}>{msg}</li>
-        ))}
-      </ul>
+    <div className="flex gap-2 h-screen w-screen p-10 justify-center">
+      <div className="flex flex-col max-w-md">
+        <div className="flex flex-col py-2 relative">
+          <div className="flex">
+            <select
+              value={inputCurrency}
+              onChange={(e) => {
+                inputCurrency === e.target.value
+                  ? switchInputAndOutput()
+                  : setInputCurrency(e.target.value);
+              }}
+              className="bg-gray-200 border border-gray-300 p-2 text-black"
+            >
+              {mockTokens.map((token) => (
+                <option
+                  key={token.id}
+                  value={token.symbol}
+                  className="text-black"
+                >
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={inputAmount}
+              onChange={(e) => {
+                setAmountLoading(true);
+                setInputAmount(e.target.value);
+              }}
+              placeholder={`0.0 ${inputCurrency}`}
+              className="border border-gray-300 text-black p-10 text-right"
+            />
+          </div>
+          <button
+            onClick={switchInputAndOutput}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2"
+          >
+            Swap
+          </button>
+          <div className="flex">
+            <select
+              value={outputCurrency}
+              onChange={(e) => {
+                inputCurrency === e.target.value
+                  ? switchInputAndOutput()
+                  : setOutputCurrency(e.target.value);
+              }}
+              className="bg-gray-200 border border-gray-300 p-2 text-black"
+            >
+              {mockTokens.map((token) => (
+                <option
+                  key={token.id}
+                  value={token.symbol}
+                  className="text-black"
+                >
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+            <input
+              disabled
+              type="text"
+              value={amountLoading ? "loading..." : outputAmount}
+              placeholder=""
+              className="border border-gray-300 text-black text-right p-10 bg-white"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleTrade}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
+        >
+          Trade
+        </button>
+      </div>
     </div>
   );
 }
