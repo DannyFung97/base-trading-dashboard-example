@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, lazy, useCallback } from "react";
+import Modal from "@/components/molecules/Modal";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface Token {
   id: number;
@@ -40,18 +42,33 @@ const tokenIdMap: { [key: string]: Token } = mockTokens.reduce((acc, token) => {
   return acc;
 }, {} as { [key: string]: Token });
 
-const Modal = lazy(() => import("@/components/molecules/Modal"));
+const createQueryString = (params: { [key: string]: string }) => {
+  return new URLSearchParams(params).toString();
+};
 
 export default function Home() {
-  const [debouncedInputAmount, setDebouncedInputAmount] = useState("");
+  const searchParams = useSearchParams();
+  const queryTokenA = searchParams.get("tokenA");
+  const queryTokenB = searchParams.get("tokenB");
 
+  const [debouncedInputAmount, setDebouncedInputAmount] = useState("");
   const [inputAmount, setInputAmount] = useState("");
-  const [inputToken, setInputToken] = useState(mockTokens[0].symbol);
-  const [outputToken, setOutputToken] = useState(mockTokens[1].symbol);
+  const [inputToken, setInputToken] = useState(
+    typeof queryTokenA === "string" ? queryTokenA : mockTokens[0].symbol
+  );
+  const [outputToken, setOutputToken] = useState(
+    typeof queryTokenB === "string" ? queryTokenB : mockTokens[1].symbol
+  );
   const [isTokenModalVisible, setIsTokenModalVisible] = useState<
     false | "changingA" | "changingB"
   >(false);
   const [amountLoading, setAmountLoading] = useState(false);
+
+  const updateUrl = (inputToken: string, outputToken: string) => {
+    const newUrl =
+      "/swap?" + createQueryString({ tokenA: inputToken, tokenB: outputToken });
+    window.history.replaceState(null, "", newUrl);
+  };
 
   const outputAmount = useMemo(() => {
     const _inputToken = tokenIdMap[inputToken];
@@ -89,6 +106,7 @@ export default function Home() {
   const switchInputAndOutput = () => {
     setInputToken(outputToken);
     setOutputToken(inputToken);
+    updateUrl(outputToken, inputToken);
   };
 
   const handleSelectToken = useCallback(
@@ -98,6 +116,7 @@ export default function Home() {
           switchInputAndOutput();
         } else {
           setInputToken(token.symbol);
+          updateUrl(token.symbol, outputToken);
         }
       }
       if (isTokenModalVisible === "changingB") {
@@ -105,33 +124,28 @@ export default function Home() {
           switchInputAndOutput();
         } else {
           setOutputToken(token.symbol);
+          updateUrl(inputToken, token.symbol);
         }
       }
       setIsTokenModalVisible(false);
     },
-    [isTokenModalVisible]
+    [isTokenModalVisible, inputToken, outputToken]
   );
 
   return (
-    <div className="flex gap-2 h-screen w-screen p-10 justify-center">
+    <div className="flex gap-2 w-screen p-10 justify-center">
       {!!isTokenModalVisible && (
         <Modal
           isVisible={!!isTokenModalVisible}
           onClose={() => setIsTokenModalVisible(false)}
           modalTitle={"Select Token"}
         >
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-1 border border-width-2 p-2">
             {mockTokens.map((token) => (
               <button
                 key={token.id}
                 onClick={() => handleSelectToken(token)}
-                className={`${
-                  token.symbol === inputToken
-                    ? "bg-blue-500 hover:bg-blue-700"
-                    : token.symbol === outputToken
-                    ? "bg-green-500 hover:bg-green-700"
-                    : "bg-gray-500 hover:bg-gray-700"
-                } text-white font-bold py-2 px-4 rounded`}
+                className={"font-bold py-2 px-4 rounded hover:bg-blue-200"}
               >
                 {token.symbol}
               </button>
@@ -143,8 +157,9 @@ export default function Home() {
         <div className="flex flex-col p-2 relative bg-white">
           <div className="items-center flex border-b-4 border-blue-500">
             <button
+              style={{ width: "100px" }}
               onClick={() => setIsTokenModalVisible("changingA")}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-blue-700 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded"
             >
               {inputToken}
             </button>
@@ -161,14 +176,15 @@ export default function Home() {
           </div>
           <button
             onClick={switchInputAndOutput}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2"
           >
             Swap
           </button>
           <div className="items-center flex">
             <button
+              style={{ width: "100px" }}
               onClick={() => setIsTokenModalVisible("changingB")}
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-blue-700 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded"
             >
               {outputToken}
             </button>

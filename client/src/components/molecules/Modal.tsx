@@ -14,15 +14,28 @@ export default function Modal({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out">
-      <div className="bg-white p-6 rounded shadow-lg w-1/3">
-        <h2 className="text-xl font-bold mb-4">{modalTitle}</h2>
-        <button
-          onClick={onClose}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Close
-        </button>
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 flex items-center justify-center transition-colors z-50 ${
+        isVisible ? "visible bg-black/20 backdrop-blur-sm" : "invisible"
+      }`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`
+          bg-white rounded-xl shadow p-6 transition-all min-w-xl
+          ${isVisible ? "scale-100 opacity-100" : "scale-125 opacity-0"}
+        `}
+      >
+        <div className="flex justify-between items-center">
+          <h2 className="text-md font-bold">{modalTitle}</h2>
+          <button
+            onClick={onClose}
+            className="bg-transparent font-bold py-2 px-4 rounded"
+          >
+            X
+          </button>
+        </div>
         {children}
       </div>
     </div>
