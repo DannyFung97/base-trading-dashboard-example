@@ -7,7 +7,7 @@ const mockTransactions = [
     id: 1,
     date: "2025-02-01",
     type: "Buy",
-    asset: "Bitcoin",
+    asset: "WBTC",
     amount: 0.5,
     price: 45000,
   },
@@ -15,9 +15,33 @@ const mockTransactions = [
     id: 2,
     date: "2025-02-05",
     type: "Sell",
-    asset: "Ethereum",
+    asset: "ETH",
     amount: 2,
     price: 3000,
+  },
+  {
+    id: 3,
+    date: "2025-02-10",
+    type: "Buy",
+    asset: "WBTC",
+    amount: 1,
+    price: 50000,
+  },
+  {
+    id: 4,
+    date: "2025-02-15",
+    type: "Sell",
+    asset: "ETH",
+    amount: 3,
+    price: 4000,
+  },
+  {
+    id: 5,
+    date: "2025-02-16",
+    type: "Sell",
+    asset: "ETH",
+    amount: 1,
+    price: 2000,
   },
   // Add more mock transactions here
 ];
@@ -25,7 +49,7 @@ const mockTransactions = [
 const mockPortfolio = [
   { asset: "Bitcoin", amount: 1.5, value: 67500 },
   { asset: "Ethereum", amount: 5, value: 15000 },
-  // Add more mock portfolio items here
+  { asset: "Tether", amount: 1000, value: 1000 },
 ];
 
 export default function User() {
@@ -35,7 +59,21 @@ export default function User() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">User Address: {address}</h1>
-
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Portfolio</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {mockPortfolio.map((item, index) => (
+            <div
+              key={index}
+              className="p-4 border border-gray-200 rounded-lg bg-white"
+            >
+              <h3 className="text-lg font-bold">{item.asset}</h3>
+              <p>Amount: {item.amount}</p>
+              <p>Value: ${item.value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-2">Transaction History</h2>
         <table className="min-w-full bg-white border border-gray-200">
@@ -60,22 +98,6 @@ export default function User() {
             ))}
           </tbody>
         </table>
-      </section>
-
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Portfolio</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockPortfolio.map((item, index) => (
-            <div
-              key={index}
-              className="p-4 border border-gray-200 rounded-lg bg-white"
-            >
-              <h3 className="text-lg font-bold">{item.asset}</h3>
-              <p>Amount: {item.amount}</p>
-              <p>Value: ${item.value}</p>
-            </div>
-          ))}
-        </div>
       </section>
     </div>
   );

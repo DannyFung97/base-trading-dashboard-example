@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, useCallback } from "react";
 
 interface Token {
   id: number;
@@ -40,19 +40,23 @@ const tokenIdMap: { [key: string]: Token } = mockTokens.reduce((acc, token) => {
   return acc;
 }, {} as { [key: string]: Token });
 
+const Modal = lazy(() => import("@/components/molecules/Modal"));
+
 export default function Home() {
   const [debouncedInputAmount, setDebouncedInputAmount] = useState("");
 
   const [inputAmount, setInputAmount] = useState("");
-  const [inputCurrency, setInputCurrency] = useState(mockTokens[0].symbol);
-  const [outputCurrency, setOutputCurrency] = useState(mockTokens[1].symbol);
-
+  const [inputToken, setInputToken] = useState(mockTokens[0].symbol);
+  const [outputToken, setOutputToken] = useState(mockTokens[1].symbol);
+  const [isTokenModalVisible, setIsTokenModalVisible] = useState<
+    false | "changingA" | "changingB"
+  >(false);
   const [amountLoading, setAmountLoading] = useState(false);
 
   const outputAmount = useMemo(() => {
-    const inputToken = tokenIdMap[inputCurrency];
-    const outputToken = tokenIdMap[outputCurrency];
-    if (!inputToken || !outputToken) {
+    const _inputToken = tokenIdMap[inputToken];
+    const _outputToken = tokenIdMap[outputToken];
+    if (!_inputToken || !_outputToken) {
       return "";
     }
 
@@ -62,9 +66,9 @@ export default function Home() {
     }
 
     const outputAmountNumber =
-      (inputAmountNumber * inputToken.price) / outputToken.price;
-    return outputAmountNumber.toFixed(outputToken.decimals);
-  }, [debouncedInputAmount, inputCurrency, outputCurrency]);
+      (inputAmountNumber * _inputToken.price) / _outputToken.price;
+    return outputAmountNumber.toFixed(_outputToken.decimals);
+  }, [debouncedInputAmount, inputToken, outputToken]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -83,36 +87,67 @@ export default function Home() {
   };
 
   const switchInputAndOutput = () => {
-    setInputCurrency(outputCurrency);
-    setOutputCurrency(inputCurrency);
+    setInputToken(outputToken);
+    setOutputToken(inputToken);
   };
 
-  console.log(amountLoading);
+  const handleSelectToken = useCallback(
+    (token: Token) => {
+      if (isTokenModalVisible === "changingA") {
+        if (token.symbol === outputToken) {
+          switchInputAndOutput();
+        } else {
+          setInputToken(token.symbol);
+        }
+      }
+      if (isTokenModalVisible === "changingB") {
+        if (token.symbol === inputToken) {
+          switchInputAndOutput();
+        } else {
+          setOutputToken(token.symbol);
+        }
+      }
+      setIsTokenModalVisible(false);
+    },
+    [isTokenModalVisible]
+  );
 
   return (
     <div className="flex gap-2 h-screen w-screen p-10 justify-center">
+      {!!isTokenModalVisible && (
+        <Modal
+          isVisible={!!isTokenModalVisible}
+          onClose={() => setIsTokenModalVisible(false)}
+          modalTitle={"Select Token"}
+        >
+          <div className="flex flex-col">
+            {mockTokens.map((token) => (
+              <button
+                key={token.id}
+                onClick={() => handleSelectToken(token)}
+                className={`${
+                  token.symbol === inputToken
+                    ? "bg-blue-500 hover:bg-blue-700"
+                    : token.symbol === outputToken
+                    ? "bg-green-500 hover:bg-green-700"
+                    : "bg-gray-500 hover:bg-gray-700"
+                } text-white font-bold py-2 px-4 rounded`}
+              >
+                {token.symbol}
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
       <div className="flex flex-col max-w-md">
-        <div className="flex flex-col py-2 relative">
-          <div className="flex">
-            <select
-              value={inputCurrency}
-              onChange={(e) => {
-                inputCurrency === e.target.value
-                  ? switchInputAndOutput()
-                  : setInputCurrency(e.target.value);
-              }}
-              className="bg-gray-200 border border-gray-300 p-2 text-black"
+        <div className="flex flex-col p-2 relative bg-white">
+          <div className="items-center flex border-b-4 border-blue-500">
+            <button
+              onClick={() => setIsTokenModalVisible("changingA")}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
-              {mockTokens.map((token) => (
-                <option
-                  key={token.id}
-                  value={token.symbol}
-                  className="text-black"
-                >
-                  {token.symbol}
-                </option>
-              ))}
-            </select>
+              {inputToken}
+            </button>
             <input
               type="text"
               value={inputAmount}
@@ -120,8 +155,8 @@ export default function Home() {
                 setAmountLoading(true);
                 setInputAmount(e.target.value);
               }}
-              placeholder={`0.0 ${inputCurrency}`}
-              className="border border-gray-300 text-black p-10 text-right"
+              placeholder={`0.0 ${inputToken}`}
+              className="text-black p-10 text-right bg-transparent"
             />
           </div>
           <button
@@ -130,32 +165,19 @@ export default function Home() {
           >
             Swap
           </button>
-          <div className="flex">
-            <select
-              value={outputCurrency}
-              onChange={(e) => {
-                inputCurrency === e.target.value
-                  ? switchInputAndOutput()
-                  : setOutputCurrency(e.target.value);
-              }}
-              className="bg-gray-200 border border-gray-300 p-2 text-black"
+          <div className="items-center flex">
+            <button
+              onClick={() => setIsTokenModalVisible("changingB")}
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
             >
-              {mockTokens.map((token) => (
-                <option
-                  key={token.id}
-                  value={token.symbol}
-                  className="text-black"
-                >
-                  {token.symbol}
-                </option>
-              ))}
-            </select>
+              {outputToken}
+            </button>
             <input
               disabled
               type="text"
               value={amountLoading ? "loading..." : outputAmount}
               placeholder=""
-              className="border border-gray-300 text-black text-right p-10 bg-white"
+              className="text-black text-right p-10 bg-transparent"
             />
           </div>
         </div>
