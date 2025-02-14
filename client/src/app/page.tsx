@@ -3,6 +3,8 @@
 import Modal from "@/components/molecules/Modal";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { useAccount } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 
 interface Token {
   id: number;
@@ -47,6 +49,9 @@ const createQueryString = (params: { [key: string]: string }) => {
 };
 
 export default function Home() {
+  const { authenticated, ready } = usePrivy();
+  const { address: wagmiAddress } = useAccount();
+
   const searchParams = useSearchParams();
   const queryTokenA = searchParams.get("tokenA");
   const queryTokenB = searchParams.get("tokenB");
@@ -103,17 +108,20 @@ export default function Home() {
     alert(`Trade executed with value: ${debouncedInputAmount}`);
   };
 
-  const switchInputAndOutput = () => {
-    setInputToken(outputToken);
-    setOutputToken(inputToken);
-    updateUrl(outputToken, inputToken);
-  };
+  const switchInputAndOutput = useCallback(
+    (tokenIn: string, tokenOut: string) => {
+      setInputToken(tokenOut);
+      setOutputToken(tokenIn);
+      updateUrl(tokenOut, tokenIn);
+    },
+    []
+  );
 
   const handleSelectToken = useCallback(
     (token: Token) => {
       if (isTokenModalVisible === "changingA") {
         if (token.symbol === outputToken) {
-          switchInputAndOutput();
+          switchInputAndOutput(outputToken, inputToken);
         } else {
           setInputToken(token.symbol);
           updateUrl(token.symbol, outputToken);
@@ -121,7 +129,7 @@ export default function Home() {
       }
       if (isTokenModalVisible === "changingB") {
         if (token.symbol === inputToken) {
-          switchInputAndOutput();
+          switchInputAndOutput(inputToken, outputToken);
         } else {
           setOutputToken(token.symbol);
           updateUrl(inputToken, token.symbol);
@@ -129,7 +137,7 @@ export default function Home() {
       }
       setIsTokenModalVisible(false);
     },
-    [isTokenModalVisible, inputToken, outputToken]
+    [isTokenModalVisible, inputToken, outputToken, switchInputAndOutput]
   );
 
   return (
@@ -175,7 +183,9 @@ export default function Home() {
             />
           </div>
           <button
-            onClick={switchInputAndOutput}
+            onClick={() => {
+              switchInputAndOutput(outputToken, inputToken);
+            }}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2"
           >
             Swap
@@ -198,10 +208,17 @@ export default function Home() {
           </div>
         </div>
         <button
+          disabled={!authenticated || !ready || !wagmiAddress}
           onClick={handleTrade}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
+          className={`${
+            !authenticated || !ready || !wagmiAddress
+              ? "bg-green-500 text-white font-bold py-2 px-4 rounded mt-4 opacity-50 cursor-not-allowed"
+              : "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
+          }`}
         >
-          Trade
+          {!authenticated || !ready || !wagmiAddress
+            ? "Login to Trade"
+            : "Trade"}
         </button>
       </div>
     </div>

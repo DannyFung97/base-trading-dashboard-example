@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { usePrivy, useLogin } from "@privy-io/react-auth";
 
 const mockTransactions = [
   {
@@ -53,15 +53,29 @@ const mockPortfolio = [
 ];
 
 export default function User() {
-  const router = useRouter();
-  const { address } = router.query;
+  const { authenticated, ready } = usePrivy();
+  const { login } = useLogin();
+
+  if (!authenticated || !ready) {
+    return (
+      <div className="flex justify-center items-center fixed inset-0">
+        <button
+          onClick={login}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Login
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">User Address: {address}</h1>
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Portfolio</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="mx-auto px-4 py-10 flex justify-center items-start gap-10">
+      <section className="w-1/2">
+        <h2 className="text-xl font-semibold mb-2 bg-gray-700 text-white text-center rounded-lg">
+          Portfolio
+        </h2>
+        <div className="flex flex-col gap-5">
           {mockPortfolio.map((item, index) => (
             <div
               key={index}
@@ -74,8 +88,10 @@ export default function User() {
           ))}
         </div>
       </section>
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Transaction History</h2>
+      <section className="w-1/2">
+        <h2 className="text-xl font-semibold mb-2 bg-gray-700 text-white text-center rounded-lg">
+          Transaction History
+        </h2>
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
             <tr>
