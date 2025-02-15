@@ -1,45 +1,45 @@
 "use client";
 
 import { truncateWithEllipsis } from "@/utils/format";
-// import { useLogin, useLogout, usePrivy } from "@privy-io/react-auth";
+import { useLogin, useLogout, usePrivy } from "@privy-io/react-auth";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useAccount } from "wagmi";
 
 export default function Header() {
   const { address: wagmiAddress } = useAccount();
-  // const { authenticated, ready, user: privyUser } = usePrivy();
+  const { authenticated, ready, user: privyUser } = usePrivy();
 
-  // console.log("privyUser", privyUser, wagmiAddress);
+  console.log("privyUser", privyUser, wagmiAddress);
 
-  // const { login } = useLogin({
-  //   onComplete: ({
-  //     user,
-  //     isNewUser,
-  //     wasAlreadyAuthenticated,
-  //     loginMethod,
-  //     loginAccount,
-  //   }) => {
-  //     console.log(
-  //       "login complete",
-  //       user,
-  //       isNewUser,
-  //       wasAlreadyAuthenticated,
-  //       loginMethod,
-  //       loginAccount,
-  //       authenticated,
-  //       user,
-  //       ready
-  //     );
-  //   },
-  //   onError: (error) => {
-  //     console.error("login error", error);
-  //   },
-  // });
+  const { login } = useLogin({
+    onComplete: ({
+      user,
+      isNewUser,
+      wasAlreadyAuthenticated,
+      loginMethod,
+      loginAccount,
+    }) => {
+      console.log(
+        "login complete",
+        user,
+        isNewUser,
+        wasAlreadyAuthenticated,
+        loginMethod,
+        loginAccount,
+        authenticated,
+        user,
+        ready
+      );
+    },
+    onError: (error) => {
+      console.error("login error", error);
+    },
+  });
 
-  // const { logout } = useLogout({
-  //   onSuccess: () => {},
-  // });
+  const { logout } = useLogout({
+    onSuccess: () => {},
+  });
 
   return (
     <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
@@ -49,7 +49,7 @@ export default function Header() {
           My Trades
         </Link>
       </div>
-      {/* {privyUser ? (
+      {privyUser ? (
         <div className="flex items-center space-x-2">
           <span>
             {truncateWithEllipsis(privyUser?.wallet?.address) ?? wagmiAddress}
@@ -68,7 +68,7 @@ export default function Header() {
         >
           Login
         </button>
-      )} */}
+      )}
     </header>
   );
 }

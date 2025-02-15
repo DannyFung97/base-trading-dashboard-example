@@ -1,6 +1,6 @@
-import { createConfig, http } from "wagmi";
+import { http } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
-// import { createConfig } from "@privy-io/wagmi";
+import { createConfig } from "@privy-io/wagmi";
 
 export const wagmiConfig = createConfig({
   chains: [baseSepolia],

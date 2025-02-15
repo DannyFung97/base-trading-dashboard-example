@@ -1,6 +1,6 @@
 "use client";
 
-// import { usePrivy, useLogin } from "@privy-io/react-auth";
+import { usePrivy, useLogin } from "@privy-io/react-auth";
 
 const mockTransactions = [
   {
@@ -53,21 +53,21 @@ const mockPortfolio = [
 ];
 
 export default function User() {
-  // const { authenticated, ready } = usePrivy();
-  // const { login } = useLogin();
+  const { authenticated, ready } = usePrivy();
+  const { login } = useLogin();
 
-  // if (!authenticated || !ready) {
-  //   return (
-  //     <div className="flex justify-center items-center fixed inset-0">
-  //       <button
-  //         onClick={login}
-  //         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-  //       >
-  //         Login
-  //       </button>
-  //     </div>
-  //   );
-  // }
+  if (!authenticated || !ready) {
+    return (
+      <div className="flex justify-center items-center fixed inset-0">
+        <button
+          onClick={login}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto px-4 py-10 flex justify-center items-start gap-10">
