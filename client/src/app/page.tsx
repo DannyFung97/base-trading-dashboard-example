@@ -276,6 +276,8 @@ export default function Home() {
           className={`${
             !authenticated || !ready || !wagmiAddress
               ? "bg-green-500 text-white font-bold py-2 px-4 rounded mt-4 opacity-50 cursor-not-allowed"
+              : isStale
+              ? "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
               : "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
           }`}
         >
