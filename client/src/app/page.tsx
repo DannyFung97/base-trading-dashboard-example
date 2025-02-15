@@ -5,6 +5,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
+import { useQuery } from "@tanstack/react-query";
+import { useSignMessage } from "wagmi";
 
 interface Token {
   id: number;
@@ -12,6 +14,7 @@ interface Token {
   symbol: string;
   price: number;
   decimals: number;
+  nextPath: string;
 }
 
 const mockTokens: Token[] = [
@@ -21,6 +24,7 @@ const mockTokens: Token[] = [
     symbol: "BTC",
     price: 45000,
     decimals: 8,
+    nextPath: "ETH",
   },
   {
     id: 2,
@@ -28,6 +32,7 @@ const mockTokens: Token[] = [
     symbol: "ETH",
     price: 3000,
     decimals: 18,
+    nextPath: "USDT",
   },
   {
     id: 3,
@@ -35,6 +40,7 @@ const mockTokens: Token[] = [
     symbol: "USDT",
     price: 1,
     decimals: 6,
+    nextPath: "BTC",
   },
   // Add more mock tokens here
 ];
@@ -48,7 +54,24 @@ const createQueryString = (params: { [key: string]: string }) => {
   return new URLSearchParams(params).toString();
 };
 
+const findTokenPath = async (
+  token: string,
+  targetToken: string
+): Promise<string[]> => {
+  console.log(`Finding path from ${token} to ${targetToken}`);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const path = [token];
+  let nextToken = tokenIdMap[token].nextPath;
+  while (nextToken !== targetToken) {
+    path.push(nextToken);
+    nextToken = tokenIdMap[nextToken].nextPath;
+  }
+  path.push(targetToken);
+  return path;
+};
+
 export default function Home() {
+  const { signMessage, isPending } = useSignMessage();
   const { authenticated, ready } = usePrivy();
   const { address: wagmiAddress } = useAccount();
 
@@ -69,7 +92,21 @@ export default function Home() {
   >(false);
   const [amountLoading, setAmountLoading] = useState(false);
 
-  const updateUrl = (inputToken: string, outputToken: string) => {
+  const {
+    data: tradePath,
+    isLoading,
+    isStale,
+    isRefetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["tokenPath", inputToken, outputToken],
+    queryFn: () => findTokenPath(inputToken, outputToken),
+    enabled: !!inputToken && !!outputToken,
+    staleTime: 10000,
+  });
+
+  const updateUrl = async (inputToken: string, outputToken: string) => {
     const newUrl =
       "/swap?" + createQueryString({ tokenA: inputToken, tokenB: outputToken });
     window.history.replaceState(null, "", newUrl);
@@ -104,8 +141,12 @@ export default function Home() {
     };
   }, [inputAmount]);
 
-  const handleTrade = () => {
-    alert(`Trade executed with value: ${debouncedInputAmount}`);
+  const handleTrade = async () => {
+    try {
+      await signMessage({ message: "Trade on Tradepost?" });
+    } catch (error) {
+      console.error("Trade failed", error);
+    }
   };
 
   const switchInputAndOutput = useCallback(
@@ -184,7 +225,7 @@ export default function Home() {
           </div>
           <button
             onClick={() => {
-              switchInputAndOutput(outputToken, inputToken);
+              switchInputAndOutput(inputToken, outputToken);
             }}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2"
           >
@@ -207,6 +248,28 @@ export default function Home() {
             />
           </div>
         </div>
+        <div className="flex bg-blue-900 my-2 justify-center p-2">
+          <div className="flex  text-blue-200">
+            {isLoading || isRefetching
+              ? "loading"
+              : tradePath?.map((token, index) => (
+                  <div key={index} className="text-center">
+                    {token} {index < tradePath.length - 1 ? "→" : ""}
+                  </div>
+                ))}
+          </div>
+        </div>
+        {!isRefetching && isStale && tradePath && (
+          <div className="flex flex-col bg-red-900 my-2 justify-center p-2 gap-2">
+            <div className="text-center text-red-200">[!] stale path data</div>
+            <button
+              className="bg-yellow-600 hover:bg-yellow-700 text-white rounded"
+              onClick={() => refetch()}
+            >
+              refresh path
+            </button>
+          </div>
+        )}
         <button
           disabled={!authenticated || !ready || !wagmiAddress}
           onClick={handleTrade}
@@ -218,6 +281,8 @@ export default function Home() {
         >
           {!authenticated || !ready || !wagmiAddress
             ? "Login to Trade"
+            : isPending
+            ? "Awaiting Confirmation"
             : "Trade"}
         </button>
       </div>

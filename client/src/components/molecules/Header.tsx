@@ -3,14 +3,11 @@
 import { truncateWithEllipsis } from "@/utils/format";
 import { useLogin, useLogout, usePrivy } from "@privy-io/react-auth";
 import Link from "next/link";
-import { useMemo } from "react";
 import { useAccount } from "wagmi";
 
 export default function Header() {
   const { address: wagmiAddress } = useAccount();
   const { authenticated, ready, user: privyUser } = usePrivy();
-
-  console.log("privyUser", privyUser, wagmiAddress);
 
   const { login } = useLogin({
     onComplete: ({
