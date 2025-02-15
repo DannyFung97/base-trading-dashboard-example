@@ -4,7 +4,7 @@ import Modal from "@/components/molecules/Modal";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+// import { usePrivy } from "@privy-io/react-auth";
 
 interface Token {
   id: number;
@@ -49,7 +49,7 @@ const createQueryString = (params: { [key: string]: string }) => {
 };
 
 export default function Home() {
-  const { authenticated, ready } = usePrivy();
+  // const { authenticated, ready } = usePrivy();
   const { address: wagmiAddress } = useAccount();
 
   const searchParams = useSearchParams();
@@ -207,7 +207,7 @@ export default function Home() {
             />
           </div>
         </div>
-        <button
+        {/* <button
           disabled={!authenticated || !ready || !wagmiAddress}
           onClick={handleTrade}
           className={`${
@@ -219,7 +219,7 @@ export default function Home() {
           {!authenticated || !ready || !wagmiAddress
             ? "Login to Trade"
             : "Trade"}
-        </button>
+        </button> */}
       </div>
     </div>
   );
