@@ -71,7 +71,7 @@ export default function User() {
 
   return (
     <div className="mx-auto px-4 py-10 flex justify-center items-start gap-10">
-      <section className="w-1/2 border border-gray-200 rounded-lg p-4">
+      <section className="w-1/2 border border-gray-500 rounded-lg p-4">
         <h2 className="text-xl font-semibold mb-2 bg-gray-700 text-white text-center rounded-lg">
           Portfolio
         </h2>
@@ -88,7 +88,7 @@ export default function User() {
           ))}
         </div>
       </section>
-      <section className="w-1/2 border border-gray-200 rounded-lg p-4">
+      <section className="w-1/2 border border-gray-500 rounded-lg p-4">
         <h2 className="text-xl font-semibold mb-2 bg-gray-700 text-white text-center rounded-lg">
           Transaction History
         </h2>

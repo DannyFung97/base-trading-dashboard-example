@@ -203,7 +203,7 @@ export default function Home() {
         </Modal>
       )}
       <div className="flex flex-col max-w-md">
-        <div className="flex flex-col p-4 relative bg-white border border-gray-200 rounded-lg">
+        <div className="flex flex-col p-4 relative bg-white border border-gray-500 rounded-lg">
           <div className="items-center flex border-b-4 border-blue-500">
             <button
               style={{ width: "100px" }}
