@@ -203,7 +203,7 @@ export default function Home() {
         </Modal>
       )}
       <div className="flex flex-col max-w-md">
-        <div className="flex flex-col p-2 relative bg-white">
+        <div className="flex flex-col p-4 relative bg-white border border-gray-200 rounded-lg">
           <div className="items-center flex border-b-4 border-blue-500">
             <button
               style={{ width: "100px" }}
@@ -276,7 +276,7 @@ export default function Home() {
           className={`${
             !authenticated || !ready || !wagmiAddress
               ? "bg-green-500 text-white font-bold py-2 px-4 rounded mt-4 opacity-50 cursor-not-allowed"
-              : isStale
+              : !isLoading && isStale
               ? "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
               : "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
           }`}
