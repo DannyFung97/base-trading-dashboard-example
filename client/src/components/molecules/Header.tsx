@@ -97,10 +97,11 @@ export default function Header() {
   return (
     <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
       <div className="flex items-center space-x-4">
-        <Link href="/">Tradepost</Link>
-        <Link href="/portfolio" className="underline">
-          Portfolio
+        <Link href="/" className="font-bold text-xl">
+          Tradepost
         </Link>
+        <div style={{ borderLeft: "1px solid #aaaaaa", height: "40px" }}></div>
+        <Link href="/portfolio">Portfolio</Link>
       </div>
       {privyUser ? (
         <div className="flex items-center space-x-2">

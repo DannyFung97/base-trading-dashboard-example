@@ -224,9 +224,9 @@ export default function Home() {
             onClick={() => {
               switchInputAndOutput(inputToken, outputToken);
             }}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2"
+            className="text-xs bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2"
           >
-            Swap
+            switch
           </button>
           <div className="items-center flex">
             <button
