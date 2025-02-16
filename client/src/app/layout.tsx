@@ -4,13 +4,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Wrapper from "@/context/Wrapper";
 import { wagmiConfig } from "@/config/wagmi";
 import Header from "@/components/molecules/Header";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider } from "@privy-io/wagmi";
 import { baseSepolia } from "viem/chains";
 import { ThemeProvider } from "@material-tailwind/react/context/theme";
+import { Suspense } from "react";
 
 const queryClient = new QueryClient();
 
@@ -47,10 +47,10 @@ export default function RootLayout({
           >
             <QueryClientProvider client={queryClient}>
               <WagmiProvider config={wagmiConfig}>
-                <Wrapper>
+                <Suspense fallback={<div>Loading...</div>}>
                   <Header />
                   {children}
-                </Wrapper>
+                </Suspense>
               </WagmiProvider>
             </QueryClientProvider>
           </PrivyProvider>

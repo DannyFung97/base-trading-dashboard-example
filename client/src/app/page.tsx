@@ -6,12 +6,7 @@ import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useSignMessage } from "wagmi";
-import {
-  Dialog,
-  DialogHeader,
-  DialogBody,
-  DialogFooter,
-} from "@material-tailwind/react";
+import { Dialog, DialogHeader } from "@material-tailwind/react";
 
 interface Token {
   id: number;
