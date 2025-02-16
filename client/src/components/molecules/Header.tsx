@@ -98,7 +98,7 @@ export default function Header() {
     <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
       <div className="flex items-center space-x-4">
         <Link href="/">Tradepost</Link>
-        <Link href="/user" className="underline">
+        <Link href="/portfolio" className="underline">
           Portfolio
         </Link>
       </div>
