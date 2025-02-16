@@ -1,12 +1,17 @@
 "use client";
 
-import Modal from "@/components/molecules/Modal";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useSignMessage } from "wagmi";
+import {
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+} from "@material-tailwind/react";
 
 interface Token {
   id: number;
@@ -184,11 +189,8 @@ export default function Home() {
   return (
     <div className="flex gap-2 w-screen p-10 justify-center">
       {!!isTokenModalVisible && (
-        <Modal
-          isVisible={!!isTokenModalVisible}
-          onClose={() => setIsTokenModalVisible(false)}
-          modalTitle={"Select Token"}
-        >
+        <Dialog open={!!isTokenModalVisible} handler={setIsTokenModalVisible}>
+          <DialogHeader>Select Token</DialogHeader>
           <div className="flex flex-col gap-1 border border-width-2 p-2">
             {mockTokens.map((token) => (
               <button
@@ -200,7 +202,7 @@ export default function Home() {
               </button>
             ))}
           </div>
-        </Modal>
+        </Dialog>
       )}
       <div className="flex flex-col max-w-md">
         <div className="flex flex-col p-4 relative bg-white border border-gray-500 rounded-lg">
@@ -263,7 +265,7 @@ export default function Home() {
           <div className="flex flex-col bg-red-900 my-2 justify-center p-2 gap-2">
             <div className="text-center text-red-200">[!] stale path data</div>
             <button
-              className="bg-yellow-600 hover:bg-yellow-700 text-white rounded"
+              className="bg-yellow-800 hover:bg-yellow-900 text-white font-bold rounded"
               onClick={() => refetch()}
             >
               refresh path
@@ -271,17 +273,17 @@ export default function Home() {
           </div>
         )}
         <button
-          disabled={!authenticated || !ready || !wagmiAddress}
+          disabled={!authenticated || !ready}
           onClick={handleTrade}
           className={`${
-            !authenticated || !ready || !wagmiAddress
+            !authenticated || !ready
               ? "bg-green-500 text-white font-bold py-2 px-4 rounded mt-4 opacity-50 cursor-not-allowed"
               : !isLoading && isStale
               ? "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
               : "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
           }`}
         >
-          {!authenticated || !ready || !wagmiAddress
+          {!authenticated || !ready
             ? "Login to Trade"
             : isPending
             ? "Awaiting Confirmation"

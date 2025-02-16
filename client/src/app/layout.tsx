@@ -10,6 +10,7 @@ import Header from "@/components/molecules/Header";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider } from "@privy-io/wagmi";
 import { baseSepolia } from "viem/chains";
+import { ThemeProvider } from "@material-tailwind/react/context/theme";
 
 const queryClient = new QueryClient();
 
@@ -33,25 +34,27 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PrivyProvider
-          appId={String(process.env.NEXT_PUBLIC_PRIVY_APP_ID)}
-          config={{
-            defaultChain: baseSepolia,
-            loginMethods: ["wallet", "email"],
-            embeddedWallets: {
-              createOnLogin: "users-without-wallets",
-            },
-          }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <WagmiProvider config={wagmiConfig}>
-              <Wrapper>
-                <Header />
-                {children}
-              </Wrapper>
-            </WagmiProvider>
-          </QueryClientProvider>
-        </PrivyProvider>
+        <ThemeProvider>
+          <PrivyProvider
+            appId={String(process.env.NEXT_PUBLIC_PRIVY_APP_ID)}
+            config={{
+              defaultChain: baseSepolia,
+              loginMethods: ["wallet", "email"],
+              embeddedWallets: {
+                createOnLogin: "users-without-wallets",
+              },
+            }}
+          >
+            <QueryClientProvider client={queryClient}>
+              <WagmiProvider config={wagmiConfig}>
+                <Wrapper>
+                  <Header />
+                  {children}
+                </Wrapper>
+              </WagmiProvider>
+            </QueryClientProvider>
+          </PrivyProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
