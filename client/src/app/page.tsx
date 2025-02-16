@@ -95,15 +95,12 @@ export default function Home() {
   const {
     data: tradePath,
     isLoading,
-    isStale,
     isRefetching,
-    error,
-    refetch,
   } = useQuery({
     queryKey: ["tokenPath", inputToken, outputToken],
     queryFn: () => findTokenPath(inputToken, outputToken),
     enabled: !!inputToken && !!outputToken,
-    staleTime: 10000,
+    refetchInterval: 5000,
   });
 
   const updateUrl = async (inputToken: string, outputToken: string) => {
@@ -239,7 +236,9 @@ export default function Home() {
             <input
               disabled
               type="text"
-              value={amountLoading ? "loading..." : outputAmount}
+              value={
+                amountLoading || isRefetching ? "loading..." : outputAmount
+              }
               placeholder=""
               className="text-black text-right p-10 bg-transparent"
             />
@@ -247,7 +246,7 @@ export default function Home() {
         </div>
         <div className="flex bg-blue-900 my-2 justify-center p-2">
           <div className="flex  text-blue-200">
-            {isLoading || isRefetching
+            {isLoading
               ? "loading"
               : tradePath?.map((token, index) => (
                   <div key={index} className="text-center">
@@ -256,25 +255,12 @@ export default function Home() {
                 ))}
           </div>
         </div>
-        {!isRefetching && isStale && tradePath && (
-          <div className="flex flex-col bg-red-900 my-2 justify-center p-2 gap-2">
-            <div className="text-center text-red-200">[!] stale path data</div>
-            <button
-              className="bg-yellow-800 hover:bg-yellow-900 text-white font-bold rounded"
-              onClick={() => refetch()}
-            >
-              refresh path
-            </button>
-          </div>
-        )}
         <button
           disabled={!authenticated || !ready || outputToken === inputToken}
           onClick={handleTrade}
           className={`${
             !authenticated || !ready
               ? "bg-green-500 text-white font-bold py-2 px-4 rounded mt-4 opacity-50 cursor-not-allowed"
-              : !isLoading && isStale
-              ? "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
               : "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
           }`}
         >
