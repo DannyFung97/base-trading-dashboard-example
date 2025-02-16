@@ -268,7 +268,7 @@ export default function Home() {
           </div>
         )}
         <button
-          disabled={!authenticated || !ready}
+          disabled={!authenticated || !ready || outputToken === inputToken}
           onClick={handleTrade}
           className={`${
             !authenticated || !ready
